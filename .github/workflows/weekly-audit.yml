@@ -1,0 +1,67 @@
+name: Weekly Reserval Audit (Playwright)
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs every Monday 10:00 Cairo time (DST-safe approach)
+    - cron: "0 7 * * 1"
+    - cron: "0 8 * * 1"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Gate (run only at Cairo 10:00)
+        id: gate
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const now = new Date();
+          const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Africa/Cairo',
+            weekday: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }).formatToParts(now);
+          const weekday = (parts.find(p => p.type === 'weekday')?.value || '').toLowerCase();
+          const hour = parts.find(p => p.type === 'hour')?.value || '';
+          const minute = parts.find(p => p.type === 'minute')?.value || '';
+          const shouldRun = weekday.startsWith('mon') && hour === '10' && minute === '00';
+          require('fs').appendFileSync(process.env.GITHUB_OUTPUT, `run=${shouldRun}\n`);
+          console.log(`Cairo: ${weekday} ${hour}:${minute} run=${shouldRun}`);
+          NODE
+
+      - name: Setup Node
+        if: github.event_name == 'workflow_dispatch' || steps.gate.outputs.run == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        if: github.event_name == 'workflow_dispatch' || steps.gate.outputs.run == 'true'
+        run: npm ci
+
+      - name: Install Playwright browsers
+        if: github.event_name == 'workflow_dispatch' || steps.gate.outputs.run == 'true'
+        run: npx playwright install --with-deps
+
+      - name: Run audit
+        if: github.event_name == 'workflow_dispatch' || steps.gate.outputs.run == 'true'
+        env:
+          BASE_URL: "https://www.reserval.com"
+          # Optional:
+          # START_INDEX: "1"
+        run: npx playwright test --config=playwright.config.ts
+
+      - name: Upload artifacts (report + TSV + screenshots)
+        if: github.event_name == 'workflow_dispatch' || steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: reserval-weekly-audit
+          path: artifacts
+          retention-days: 30
