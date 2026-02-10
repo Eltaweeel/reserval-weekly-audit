@@ -1,0 +1,3 @@
+| No. | Screenshot (Files & media, leave empty) | Bug Link (Repro URL) | Repeated | Priority | Device / Platform | Description of Issue | Recommendation / Fix Suggestion | Status | Date Found | Notes / Validation Comments |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 00001 |  | https://www.reserval.com/ar | No | Urgent | D Web | Header logo not visible, navigation may be broken. | Check header layout CSS and asset loading, verify CDN and caching. | Open | 09-02-2026 | Language: AR. Steps: Open home page as guest. Expected: Header logo and primary navigation are visible. Actual: Logo not visible or header appears broken. Screenshot: Capture full top header and above-the-fold area. Include URL bar. Local file: 00001.png |
