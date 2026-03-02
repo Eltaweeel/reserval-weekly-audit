@@ -3,10 +3,8 @@ name: Weekly Reserval Audit (Playwright)
 on:
   workflow_dispatch:
   schedule:
-    # Runs every Monday 10:00 Cairo time (DST-safe approach)
     - cron: "0 7 * * 1"
     - cron: "0 8 * * 1"
-
 jobs:
   audit:
     runs-on: ubuntu-latest
